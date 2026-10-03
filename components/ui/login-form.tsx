@@ -1,6 +1,6 @@
-import { TextInput, Button, StyleSheet, View, TouchableOpacity , Text} from "react-native";
+import { TextInput, Button, StyleSheet, View, TouchableOpacity , Text, ToastAndroid} from "react-native";
 import { ThemedView } from "../themed-view";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import ModalRecuperacaoSenha from "./modal-recuperacao-senha";
 import { useState } from "react";
 
@@ -11,7 +11,45 @@ interface LoginFormProps {
 export default function LoginForm({ onBack }: LoginFormProps) {
 
     const [recuperacao, setRecuperacao] = useState<boolean>(false);
-    
+    const [email, setEmail] = useState<string>();
+    const [senha, setSenha] = useState<string>();
+
+    const router = useRouter();
+
+    const login = async () => {
+        try {
+            const response = await fetch('http://192.168.1.121:8080/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    senha:  senha
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                ToastAndroid.show(
+                    data?.aviso ?? 'Erro ao logar',
+                    ToastAndroid.LONG
+                );
+                return;
+            }
+
+            router.replace("/screens/home");
+        } catch (erro) {
+            console.error('Erro no fetch:', erro);
+
+            ToastAndroid.show(
+                'Não foi possível conectar ao servidor',
+                ToastAndroid.LONG
+            );
+        }
+    }
+
     return (
         <ThemedView style={styles.container}>
             <View style={styles.formContainer}>
@@ -20,18 +58,20 @@ export default function LoginForm({ onBack }: LoginFormProps) {
                     style={styles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    onChangeText={(e) => setEmail(e)}
                 />
 
                 <TextInput
                     placeholder="Senha"
                     style={styles.input}
                     secureTextEntry
+                    onChangeText={(e) => setSenha(e)}
                 />
 
                 <View style={styles.buttonContainer}>
                     <Button
                         title="Acessar"
-                        onPress={() => console.log("Acessar")}
+                        onPress={() => login()}
                     />
 
                     <TouchableOpacity style={styles.link} onPress={() => setRecuperacao(true)}>

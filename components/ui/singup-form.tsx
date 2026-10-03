@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { TextInput, Button, StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { use, useState } from "react";
+import { TextInput, Button, StyleSheet, View, Text, TouchableOpacity, ToastAndroid, Alert } from "react-native";
 import { ThemedView } from "../themed-view";
 import { Link } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -9,11 +9,48 @@ interface SingUpFormProps {
 }
 
 export default function SingUpForm({ onBack }: SingUpFormProps) {
-    const [birthDate, setBirthDate] = useState(new Date());
     const [showError, setShowError] = useState(false);
+    const [nome, setNome] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
+    const [confirmEmail, setConfirmEmail] = useState<string>('');
+    const [cpf, setCpf] = useState<number>(0);
+    const [telefone, setTelefone] = useState<string>('');
+    const [senha, setSenha] = useState<string>('');
+    const [confirmSenha, setConfirmSenha] = useState<string>('');
+
+    const cadastrar =  async () => {
+        try {
+            const response = await fetch('http://192.168.1.121:8080/aplicativo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nome: nome,
+                    email: email,
+                    confirmar_email: confirmEmail,
+                    cpf: cpf,
+                    telefone: telefone,
+                    senha: senha,
+                    confirmar_senha: confirmSenha
+                })
+            });
+
+            if (!response.ok) {
+                ToastAndroid.show('Erro inesperado. Contate o suporte técnico', 1000);
+                return;
+            }
+
+            ToastAndroid.show('Cadastrado com sucesso', 1000);
+            onBack();
+        } catch (error) {
+            Alert.alert("Erro ao cadastrar")
+        }
+    }
 
     return (
         <ThemedView style={styles.container}>
+            <Text style={styles.title}>Novo Usuário</Text>
             <View style={styles.formContainer}>
 
                 {showError && (
@@ -28,9 +65,10 @@ export default function SingUpForm({ onBack }: SingUpFormProps) {
                 <TextInput
                     placeholder="Nome Completo"
                     style={styles.input}
+                    onChangeText={(e) => setNome(e)}
                 />
 
-                <DateTimePicker
+                {/* <DateTimePicker
                     value={birthDate}
                     mode="date"
                     display="default"
@@ -39,57 +77,69 @@ export default function SingUpForm({ onBack }: SingUpFormProps) {
                             setBirthDate(selectedDate);
                         }
                     }}
-                />
+                /> */}
 
-                <TextInput
+                {/* <TextInput
                     placeholder="Data de Nascimento"
                     style={styles.input}
                     value={birthDate.toLocaleDateString()}
                     editable={false}
-                />
+                /> */}
 
                 <TextInput
                     placeholder="E-mail"
                     style={styles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    onChangeText={(e) => setEmail(e)}
                 />
 
-                <TextInput
+                {/* <TextInput
                     placeholder="RG"
                     style={styles.input}
                     autoCapitalize="none"
-                />
-
-                <TextInput
-                    placeholder="CPF"
-                    style={styles.input}
-                    autoCapitalize="none"
-                />
+                /> */}
 
                 <TextInput
                     placeholder="Confirmar E-mail"
                     style={styles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    onChangeText={(e) => setConfirmEmail(e)}
+                />
+
+                <TextInput
+                    placeholder="CPF"
+                    style={styles.input}
+                    autoCapitalize="none"
+                    onChangeText={(e) => setCpf((Number(e)))}
+                />
+
+                <TextInput
+                    placeholder="Telefone"
+                    style={styles.input}
+                    autoCapitalize="none"
+                    onChangeText={(e) => setTelefone(e)}
                 />
 
                 <TextInput
                     placeholder="Senha"
                     style={styles.input}
                     secureTextEntry
+                    onChangeText={(e) => setSenha(e)}
                 />
 
                 <TextInput
                     placeholder="Confirmar Senha"
                     style={styles.input}
                     secureTextEntry
+                    onChangeText={(e) => setConfirmSenha(e)}
                 />
 
                 <View style={styles.buttonContainer}>
                     <Button
                         title="Criar Conta"
-                        onPress={() => console.log("Acessar")}
+                        onPress={() => cadastrar()}
                     />
 
                     <Link href="/screens/initial" style={styles.link} onPress={onBack}>
@@ -145,5 +195,9 @@ const styles = StyleSheet.create({
     },
     erroBox: {
         backgroundColor: 'red'
+    },
+    title: {
+        fontSize: 25,
+        paddingBottom: 20
     }
 });
