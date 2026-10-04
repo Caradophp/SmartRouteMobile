@@ -1,6 +1,6 @@
 import { styles } from "@/styles/global-style";
 import { useState } from "react";
-import { Button, Modal, Text, TextInput, View } from "react-native";
+import { Alert, Button, Modal, Text, TextInput, ToastAndroid, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
@@ -17,12 +17,105 @@ export default function ModalRecuperacaoSenha({ open, setOpen }: Props) {
     const [confirmarSenha, setConfirmarSenha] = useState<string>('');
     const [codigo, setCodigo] = useState<number>(0);
 
-    const varificarEmailEnviarCodigo = async () => {
-        // TODO: Verificar email para enviar código
+    const verificarEmailEnviarCodigo = async () => {
+        try {
+            const response = await fetch(`http://192.168.1.121:8080/login/email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: emailCpf
+                })
+            });
+
+            if (!response.ok) {
+                ToastAndroid.show('Erro desconhecido. Contate o suporte técnico', 1000);
+                return;
+            }
+
+            ToastAndroid.show('E-mail enviado com sucesso. Verificaque sua caixa de entrada', 1000);
+            setCodigoValido(true);
+        } catch (error) {
+            ToastAndroid.show('Erro', 1000);
+            throw error;
+        }
     }
 
     const verificarSeCodigoValido = async () => {
-        // TODO: Verifica se o código enviado para o email do usuário é válido
+        try {
+            const response = await fetch(`http://192.168.1.121:8080/login/code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: emailCpf,
+                    codigo: codigo
+                })
+            });
+
+            if (!response.ok) {
+                ToastAndroid.show('Erro desconhecido. Contate o suporte técnico', 1000);
+                return;
+            }
+
+            ToastAndroid.show('Código válidado com sucesso. Digite sua nova senha', 1000);
+            setCodigoValido(false);
+            setDigitandoSenhaNova(true)
+        } catch (error) {
+            ToastAndroid.show('Erro', 1000);
+            throw error;
+        }
+    }
+
+    const trocarSenhaUsuario = async () => {
+        try {
+            const response = await fetch(`http://192.168.1.121:8080/aplicativo`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: emailCpf,
+                    senha: senhaNova,
+                    confirmar_senha: confirmarSenha
+                })
+            });
+
+            if (!response.ok) {
+                ToastAndroid.show('Erro desconhecido. Contate o suporte técnico', 1000);
+                return;
+            }
+
+            ToastAndroid.show('Senha alterada com sucesso', 1000);
+            setOpen(false)
+            reset();
+        } catch (error) {
+            ToastAndroid.show('Erro', 1000);
+            throw error;
+        }
+    }
+
+    const sendHandler = () => {
+        if (!codigoValido && !digitantoSenhaNova) {
+            verificarEmailEnviarCodigo();
+        } else if (codigoValido) {
+            verificarSeCodigoValido();
+        } else if (digitantoSenhaNova) {
+            trocarSenhaUsuario();
+        } else {
+            Alert.alert('Entre em contato com nosso time de suporte.');
+        }
+    }
+
+    const reset = () => {
+        setCodigoValido(false);
+        setDigitandoSenhaNova(false);
+        setCodigo(0);
+        setEmailCpf('');
+        setSenhaNova('');
+        setConfirmarSenha('');
     }
 
     return (
@@ -47,8 +140,8 @@ export default function ModalRecuperacaoSenha({ open, setOpen }: Props) {
                             {digitantoSenhaNova && <TextInput placeholder="Confirme a nova senha" style={styles.input} value={confirmarSenha} onChangeText={(e) => setConfirmarSenha(e)}/>}
                             {codigoValido && <TextInput placeholder="Digite o código enviado no e-mail" style={styles.input} value={String(codigo)} onChangeText={(e) => setCodigo(Number(e))}/>}
                             <View style={{ display: 'flex', flexDirection: 'row', gap: 170 }}>
-                                <Button title="Cancelar" onPress={() => setOpen(false)}/>
-                                <Button title="Enviar"/>
+                                <Button title="Cancelar" onPress={() => {setOpen(false), reset()}}/>
+                                <Button title="Enviar" onPress={() => sendHandler()}/>
                             </View>
                         </SafeAreaView>
                     </View>
