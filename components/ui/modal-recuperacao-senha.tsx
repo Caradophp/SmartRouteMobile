@@ -1,3 +1,4 @@
+import { API_URL } from "@/constants/Util";
 import { styles } from "@/styles/global-style";
 import { useState } from "react";
 import { Alert, Button, Modal, Text, TextInput, ToastAndroid, View } from "react-native";
@@ -19,7 +20,7 @@ export default function ModalRecuperacaoSenha({ open, setOpen }: Props) {
 
     const verificarEmailEnviarCodigo = async () => {
         try {
-            const response = await fetch(`http://192.168.1.121:8080/login/email`, {
+            const response = await fetch(`${API_URL}/login/email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +45,7 @@ export default function ModalRecuperacaoSenha({ open, setOpen }: Props) {
 
     const verificarSeCodigoValido = async () => {
         try {
-            const response = await fetch(`http://192.168.1.121:8080/login/code`, {
+            const response = await fetch(`${API_URL}/login/code`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -71,7 +72,7 @@ export default function ModalRecuperacaoSenha({ open, setOpen }: Props) {
 
     const trocarSenhaUsuario = async () => {
         try {
-            const response = await fetch(`http://192.168.1.121:8080/aplicativo`, {
+            const response = await fetch(`${API_URL}/aplicativo`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

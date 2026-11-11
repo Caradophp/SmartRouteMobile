@@ -2,7 +2,9 @@ import { TextInput, Button, StyleSheet, View, TouchableOpacity , Text, ToastAndr
 import { ThemedView } from "../themed-view";
 import { Link, useRouter } from "expo-router";
 import ModalRecuperacaoSenha from "./modal-recuperacao-senha";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AppContext } from "@/context/AppContext";
+import { API_URL } from "@/constants/Util";
 
 interface LoginFormProps {
     onBack: () => void
@@ -15,17 +17,19 @@ export default function LoginForm({ onBack }: LoginFormProps) {
     const [senha, setSenha] = useState<string>();
 
     const router = useRouter();
+    const context = useContext(AppContext);
 
     const login = async () => {
         try {
-            const response = await fetch('http://192.168.1.121:8080/login', {
+            const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     email: email,
-                    senha:  senha
+                    senha:  senha,
+                    isAplicativo: true
                 })
             });
 
@@ -39,6 +43,7 @@ export default function LoginForm({ onBack }: LoginFormProps) {
                 return;
             }
 
+            context.setToken(data.token);
             router.replace("/screens/home");
         } catch (erro) {
             console.error('Erro no fetch:', erro);

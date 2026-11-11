@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import AppProvider from '@/context/AppContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -14,11 +15,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AppProvider>
       <Stack>
-        <Stack.Screen name='screens/initial' options={{ title: 'Smart Route', headerShown: false }} />
+        {/* <AppProvider> */}
+          <Stack.Screen name='screens/initial' options={{ title: 'Smart Route', headerShown: false }} />
+        {/* </AppProvider> */}
         {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} /> */}
       </Stack>
+      </AppProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

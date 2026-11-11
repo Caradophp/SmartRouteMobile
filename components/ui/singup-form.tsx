@@ -3,6 +3,7 @@ import { TextInput, Button, StyleSheet, View, Text, TouchableOpacity, ToastAndro
 import { ThemedView } from "../themed-view";
 import { Link } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { API_URL } from "@/constants/Util";
 
 interface SingUpFormProps {
     onBack: () => void
@@ -20,7 +21,7 @@ export default function SingUpForm({ onBack }: SingUpFormProps) {
 
     const cadastrar =  async () => {
         try {
-            const response = await fetch('http://192.168.1.121:8080/aplicativo', {
+            const response = await fetch(`${API_URL}/aplicativo`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
