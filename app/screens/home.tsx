@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Button, StyleSheet, Text, ToastAndroid, Platf
 import MapView, { Marker, Polyline, Region, } from "react-native-maps";
 
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 
 // -------------------------------------------------- // CONSTANTS // --------------------------------------------------
 
@@ -32,6 +33,7 @@ type NearestHealthPointResponse = {
 
 export default function Home() {
   const context = useContext(AppContext);
+  const router = useRouter();
 
   const mapRef = useRef<MapView>(null);
 
@@ -222,6 +224,30 @@ export default function Home() {
 
   };
 
+  // -------------------------------------------------- // HEALTH UNIT // --------------------------------------------------
+
+  const findHealthUnit = async () => {
+    try {
+      const response = await fetch(`${API_URL}/health-unit/nearest?latitude=${latitude}&longitude=${longitude}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${context.token}`
+        }
+      });
+
+      if (!response.ok) {
+        ToastAndroid.show('Erro desconhecido. Contate o suporte técnico', 3000);
+        return;
+      }
+
+      const data = await response.json();
+
+      ToastAndroid.show('Exibindo rotas', 3000);
+    } catch (error) {
+      ToastAndroid.show('Erro ao buscar unidades', 3000);
+    }
+  }
+
   // -------------------------------------------------- // RENDER // --------------------------------------------------
 
   return (<ThemedView style={styles.container}>
@@ -331,6 +357,13 @@ export default function Home() {
       />
     )}
 
+    {/* FIND HEALTH UNIT BUTTON */}
+    <Button 
+      title="Achar Unidade"
+      color="#0004ff"
+      onPress={findHealthUnit}
+    />
+
     {/* EMERGENCY BUTTON */}
 
     <Button
@@ -339,6 +372,16 @@ export default function Home() {
       onPress={sendEmergency}
     />
 
+    {/* EMERGENCY BUTTON */}
+
+    <Button
+      title="Sair"
+      color="#ffffff"
+      onPress={() => {
+        router.replace("/screens/initial");
+        context.setToken('null');
+      }}
+    />
   </ThemedView>
 
   );

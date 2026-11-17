@@ -44,7 +44,12 @@ export default function LoginForm({ onBack }: LoginFormProps) {
             }
 
             context.setToken(data.token);
-            router.replace("/screens/home");
+
+            if (data.role == 'DRIVER') {
+                router.replace("/screens/driver");
+            } else {
+                router.replace("/screens/home");
+            }
         } catch (erro) {
             console.error('Erro no fetch:', erro);
 

@@ -1,12 +1,82 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, View } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
+import { API_URL } from '@/constants/Util';
+import Dropdown from 'react-native-input-select';
+import { AppContext } from '@/context/AppContext';
+import { TFlatList, TSectionList } from 'react-native-input-select/lib/typescript/src/types/index.types';
+
+type Ambulancia = {
+    id: string,
+    placa: string
+};
 
 export default function InitialScreen() {
     const [reportOpen, setReportOpen] = useState(false);
     const [problem, setProblem] = useState('');
     const [reportSent, setReportSent] = useState(false);
     const [emergencyAccepted, setEmergencyAccepted] = useState(false);
+    const [ambulances, setAmbulances] = useState<Ambulancia[]>([]);
+    const [ambulanceId, setAmbulanceId] = useState('');
+
+    const [optionsDropdown, setOptionsDropdown] = useState<TFlatList>([]);
+
+    const context = useContext(AppContext);
+
+    const loadAmbulance = async () => {
+        try {
+            const response = await fetch(`${API_URL}/ambulances/listar`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${context.token}`
+                }
+            });
+
+            if (!response.ok) {
+                ToastAndroid.show('Erro ao carregar ambulâncias. Contate o suporte técnico', 3000);
+                return;
+            }
+
+            const data = await response.json();
+            setAmbulances(data);
+
+            ambulances.forEach(amb => {
+                optionsDropdown.push({ label: amb.placa, value: amb.id})
+            });
+
+        } catch (error) {
+            ToastAndroid.show('Erro ao carregar ambulâncias: ' + error, 3000);
+        }
+    }
+
+    const regiterDefectiveVehicle = async () => {
+        try {
+            const response = await fetch(`${API_URL}/ambulances/defective`, {
+                method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${context.token}`
+                },
+                body: JSON.stringify({
+                    id: ambulanceId,
+                    vehicleProblem: problem
+                })
+            });
+
+            if (!response.ok) {
+                ToastAndroid.show('Erro ao relatar problema. Contate o suporte técnico', 3000);
+                return;
+            }
+
+            ToastAndroid.show('Problema registrado com sucesso', 3000);
+        } catch (error) {
+            ToastAndroid.show('Erro ao relatar problema: ' + error, 3000);
+        }
+    }
+
+    useEffect(() => {
+        loadAmbulance()
+    }, [reportOpen]);
 
     return (
         <ThemedView style={styles.container}>
@@ -61,6 +131,13 @@ export default function InitialScreen() {
                         </Pressable>
                     ) : (
                         <View>
+                            <Dropdown 
+                                label='Placa da ambulância'
+                                placeholder='Selecione uma opção'
+                                options={optionsDropdown}
+                                selectedValue={ambulanceId}
+                                onValueChange={(value) => setAmbulanceId(String(value))}
+                            />
                             <TextInput
                                 style={styles.input}
                                 placeholder="Descreva o problema..."
@@ -72,9 +149,15 @@ export default function InitialScreen() {
                             <Pressable
                                 style={[styles.primaryButton, !problem.trim() && styles.disabledButton]}
                                 disabled={!problem.trim()}
-                                onPress={() => { setReportSent(true); setReportOpen(false); setProblem(''); }}
+                                onPress={() => { setReportSent(true); setReportOpen(false); setProblem(''); regiterDefectiveVehicle(); }}
                             >
                                 <Text style={styles.primaryButtonText}>Enviar relato</Text>
+                            </Pressable>
+                            <Pressable
+                                style={[styles.secundaryButton]}
+                                onPress={() => { setReportSent(true); setReportOpen(false); setProblem('');}}
+                            >
+                                <Text style={styles.secundaryButtonText}>Cancelar</Text>
                             </Pressable>
                         </View>
                     )}
@@ -163,8 +246,21 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 12,
     },
+    secundaryButton: {
+        backgroundColor: '#fffff',
+        borderRadius: 11,
+        minHeight: 48,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 12,
+    },
     primaryButtonText: {
         color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    secundaryButtonText: {
+        color: '#000000',
         fontSize: 15,
         fontWeight: '700',
     },
